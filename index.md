@@ -1,37 +1,48 @@
-## Welcome to GitHub Pages
+## The Void Linux image/live/rootfs maker and installer
 
-You can use the [editor on GitHub](https://github.com/oSoWoSo/void-mklive/edit/gh-pages/index.md) to maintain and preview the content for your website in Markdown files.
+This repository contains utilities for Void Linux:
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
+ * installer (The Void Linux el-cheapo installer for x86)
+ * mklive    (The Void Linux live image maker for x86)
 
-### Markdown
+ * mkimage   (The Void Linux image maker for ARM platforms)
+ * mkplatformfs (The Void Linux filesystem tool to produce a rootfs for a particular platform)
+ * mkrootfs  (The Void Linux rootfs maker for ARM platforms)
+ * mknet (Script to generate netboot tarballs for Void)
 
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
+#### Build Dependencies
+ * make
 
-```markdown
-Syntax highlighted code block
+#### Dependencies
+ * Compression type for the initramfs image
+   * liblz4 (for lz4, xz) (default)
+ * xbps>=0.45
+ * qemu-user-static binaries (for mkrootfs)
 
-# Header 1
-## Header 2
-### Header 3
+#### Usage
 
-- Bulleted
-- List
+Type
 
-1. Numbered
-2. List
+    $ make
 
-**Bold** and _Italic_ and `Code` text
+and then see the usage output:
 
-[Link](url) and ![Image](src)
-```
+    $ ./mklive.sh -h
+    $ ./mkrootfs.sh -h
+    $ ./mkimage.sh -h
 
-For more details see [Basic writing and formatting syntax](https://docs.github.com/en/github/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax).
+#### Examples
 
-### Jekyll Themes
+Build a native live image keyboard set to 'fr':
 
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/oSoWoSo/void-mklive/settings/pages). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
+    # ./mklive.sh -k fr
 
-### Support or Contact
+Build an i686 (on x86\_64) live image with some additional packages:
 
-Having trouble with Pages? Check out our [documentation](https://docs.github.com/categories/github-pages-basics/) or [contact support](https://support.github.com/contact) and we’ll help you sort it out.
+    # ./mklive.sh -a i686 -p 'vim rtorrent'
+
+Build an x86\_64 musl live image with packages stored in a local repository:
+
+    # ./mklive.sh -a x86_64-musl -r /path/to/host/binpkgs
+
+See the usage output for more information :-)
