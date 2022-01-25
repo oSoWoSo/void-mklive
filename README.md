@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ## The Void Linux image/live/rootfs maker and installer
 
 This repository contains utilities for Void Linux:
@@ -46,3 +47,7 @@ Build an x86\_64 musl live image with packages stored in a local repository:
     # ./mklive.sh -a x86_64-musl -r /path/to/host/binpkgs
 
 See the usage output for more information :-)
+=======
+# vb-mklive
+
+>>>>>>> debbf39 (Initial commit)
