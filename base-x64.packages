@@ -1,0 +1,49 @@
+#GRUB
+    grub-i386-efi
+    grub-x86_64-efi
+	grub-btrfs
+#BASE PKGS
+    dialog 
+    cryptsetup 
+    lvm2 
+    mdadm
+
+# NETWORKING
+    NetworkManager
+    ntp
+
+# UTILITIES
+    wget
+    bash-completion
+    xterm
+    htop
+
+# PACKAGE MANAGEMENT
+    topgrade
+
+# DEVELOPMENT
+    git
+
+# FILE SYSTEM
+    exfat-utils
+    fuse-exfat
+    ntfs-3g
+    gptfdisk
+	btrfs-progs
+# TEXT EDITORS
+    nano
+    vim
+
+# REPOSITORIES
+    void-repo-multilib
+
+
+
+
+
+
+
+
+
+
+

@@ -1,4 +1,3 @@
-*.sh
 *.img
 *.xz
 *.iso
@@ -10,3 +9,15 @@ xbps-cachedir*
 stamps*
 !dracut/*/*.sh
 !packer/scripts/*.sh
+*.asc
+package_lists/
+build-x86-images.sh
+installer.sh
+lib.sh
+mkimage.sh
+mklive.sh
+mknet.sh
+mkplatformfs.sh
+mkrootfs.sh
+release.sh
+sha256sums.txt
