@@ -29,7 +29,7 @@
 trap 'error_out $? $LINENO' INT TERM 0
 umask 022
 
-readonly REQUIRED_PKGS="base-files libgcc dash coreutils sed tar gawk syslinux grub-i386-efi grub-x86_64-efi squashfs-tools xorriso"
+readonly REQUIRED_PKGS="base-files libgcc dash coreutils sed tar gawk limine squashfs-tools xorriso"
 readonly INITRAMFS_PKGS="binutils xz device-mapper dhclient dracut-network openresolv"
 PROGNAME=$(basename "$0")
 readonly PROGNAME
@@ -184,27 +184,19 @@ cleanup_rootfs() {
 
 
 generate_limine_boot() {
-# Just following upstream documentation, needs testing and refinement
-
-    cp -f "$LIMINE_DATADIR"/limine-cd-efi.bin "$LIMINE_DIR"
+    cp -f "$LIMINE_DATADIR"/limine-cd-efi.bin "$LIMINE_DIR" 
     cp -f "$LIMINE_DATADIR"/limine-cd.bin "$LIMINE_DIR"
     cp -f "$LIMINE_DATADIR"/limine.sys "$LIMINE_DIR"
-    cp -f "$LIMINE_DATADIR"/limine.cfg "$LIMINE_DIR"
-#    cp -f "$SYSLINUX_DATADIR"/libutil.c32 "$ISOLINUX_DIR"
-#    cp -f "$SYSLINUX_DATADIR"/chain.c32 "$ISOLINUX_DIR"
-#    cp -f isolinux/isolinux.cfg.in "$ISOLINUX_DIR"/isolinux.cfg
-#    cp -f ${SPLASH_IMAGE} "$ISOLINUX_DIR"
+    cp -f ${SPLASH_IMAGE} "$LIMINE_DIR"
 
-# That will require some testing with limine.cfg.
-
-#    sed -i  -e "s|@@SPLASHIMAGE@@|$(basename "${SPLASH_IMAGE}")|" \
-#        -e "s|@@KERNVER@@|${KERNELVERSION}|" \
-#        -e "s|@@KEYMAP@@|${KEYMAP}|" \
-#        -e "s|@@ARCH@@|$BASE_ARCH|" \
-#        -e "s|@@LOCALE@@|${LOCALE}|" \
-#        -e "s|@@BOOT_TITLE@@|${BOOT_TITLE}|" \
-#        -e "s|@@BOOT_CMDLINE@@|${BOOT_CMDLINE}|" \
-#        "$ISOLINUX_DIR"/isolinux.cfg
+	sed -i -e "s|@@BOOT_CMDLINE@@|${BOOT_CMDLINE}|" \
+ 		-e "s|@@SPLASHIMAGE@@|$(basename "${SPLASH_IMAGE}")|" \
+        -e "s|@@KERNVER@@|${KERNELVERSION}|" \
+        -e "s|@@KEYMAP@@|${KEYMAP}|" \
+        -e "s|@@ARCH@@|$BASE_ARCH|" \
+        -e "s|@@LOCALE@@|${LOCALE}|" \
+        -e "s|@@BOOT_TITLE@@|${BOOT_TITLE}|" \
+        "$LIMINE_DIR"/limine.cfg      
 }
 
 
@@ -229,14 +221,14 @@ generate_iso_image() {
         -max-iso9660-filenames -omit-period \
         -omit-version-number -relaxed-filenames -allow-lowercase \
         -volid "VOID_LIVE" \
-        -b boot/limine-cd.bin \
+        -b boot/limine/limine-cd.bin \
         -no-emul-boot -boot-load-size 4 -boot-info-table \
-        --efi-boot boot/limine-cd-efi.bin \
+        --efi-boot boot/limine/limine-cd-efi.bin \
         -efi-boot-part --efi-boot-image --protective-msdos-label \
-        "$ROOTFS" -o "$OUTPUT_FILE" "$IMAGEDIR" || die "Failed to generate ISO image"
+        -output "$OUTPUT_FILE" "$IMAGEDIR" || die "Failed to generate ISO image"
 	
 	# Install the bootloader
-	"$VOIDHOSTDIR"/usr/bin/limine-deploy "$IMAGEDIR/$OUTPUT_FILE"|| die "Failed to install bootloader"
+	"$VOIDHOSTDIR"/usr/bin/limine-deploy "$OUTPUT_FILE" || die "Failed to install bootloader"
 }
 
 
@@ -266,7 +258,8 @@ while getopts "a:b:r:c:C:T:Kk:l:i:I:S:s:o:p:v:h" opt; do
     esac
 done
 shift $((OPTIND - 1))
-XBPS_REPOSITORY="$XBPS_REPOSITORY --repository=https://repo-default.voidlinux.org/current --repository=https://repo-default.voidlinux.org/current/musl"
+XBPS_REPOSITORY="$XBPS_REPOSITORY --repository=https://repo-default.voidlinux.org/current --repository=https://repo-default.voidlinux.org/current/musl \
+--repository=https://ftp.halifax.rwth-aachen.de/osdn/storage/g/a/av/avyssos/mklive-pkgs"
 # Configure dracut to use overlayfs for the writable overlay.
 BOOT_CMDLINE="$BOOT_CMDLINE rd.live.overlay.overlayfs=1 "
 
@@ -278,7 +271,7 @@ ARCH=$(xbps-uhelper arch)
 : ${XBPS_HOST_CACHEDIR:="$(pwd -P)"/xbps-cachedir-${ARCH}}
 : ${KEYMAP:=us}
 : ${LOCALE:=en_US.UTF-8}
-: ${INITRAMFS_COMPRESSION:=lz4}
+: ${INITRAMFS_COMPRESSION:=gzip}
 : ${SQUASHFS_COMPRESSION:=lz4}
 : ${BASE_SYSTEM_PKG:=base-system}
 : ${BOOT_TITLE:="Void Linux"}
@@ -306,9 +299,8 @@ CURRENT_STEP=0
 STEP_COUNT=8
 [ -n "${INCLUDE_DIRECTORY}" ] && STEP_COUNT=$((STEP_COUNT+1))
 
-# Chnage for the real dir.
-: ${LIMINE_DATADIR:="$VOIDHOSTDIR"/usr/lib/syslinux}
-: ${SPLASH_IMAGE:=data/splash.png}
+: ${LIMINE_DATADIR:="$VOIDHOSTDIR"/usr/share/limine}
+: ${SPLASH_IMAGE:=data/splash.bmp}
 : ${XBPS_INSTALL_CMD:=xbps-install}
 : ${XBPS_REMOVE_CMD:=xbps-remove}
 : ${XBPS_QUERY_CMD:=xbps-query}
@@ -316,7 +308,7 @@ STEP_COUNT=8
 : ${XBPS_UHELPER_CMD:=xbps-uhelper}
 : ${XBPS_RECONFIGURE_CMD:=xbps-reconfigure}
 
-mkdir -p "$ROOTFS" "$VOIDHOSTDIR" "$ISOLINUX_DIR" "$GRUB_DIR"
+mkdir -p "$ROOTFS" "$VOIDHOSTDIR" "$LIMINE_DIR"
 
 print_step "Synchronizing XBPS repository data..."
 copy_void_keys "$ROOTFS"
@@ -352,6 +344,10 @@ install_prereqs
 mkdir -p "$ROOTFS"/etc
 [ -s data/motd ] && cp data/motd "$ROOTFS"/etc
 [ -s data/issue ] && cp data/issue "$ROOTFS"/etc
+
+# Copy the provided limine.cfg template
+mkdir -p "$LIMINE_DIR"
+[ -s limine/limine.cfg ] && cp limine/limine.cfg "$LIMINE_DIR"/
 
 print_step "Installing void pkgs into the rootfs: ${PACKAGE_LIST} ..."
 install_packages
