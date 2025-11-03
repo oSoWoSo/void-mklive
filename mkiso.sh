@@ -150,6 +150,11 @@ build_variant() {
             PKGS="$PKGS $XORG_PKGS gnome firefox"
             SERVICES="$SERVICES dbus gdm NetworkManager polkitd"
         ;;
+        hyprland)
+            REPO="https://raw.githubusercontent.com/Encoded14/void-extra/repository-x86_64-glibc"
+            PKGS="$PKGS $WAYLAND_PKGS elogind emptty hyprland hyprpolkitagent seatd NetworkManager"
+            SERVICES="$SERVICES acpid dbus elogind emptty NetworkManager seatd polkitd"
+        ;;
         kde)
             PKGS="$PKGS $XORG_PKGS kde5 konsole firefox dolphin NetworkManager"
             SERVICES="$SERVICES dbus NetworkManager sddm"
