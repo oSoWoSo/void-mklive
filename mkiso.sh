@@ -136,16 +136,6 @@ build_variant() {
         base)
             SERVICES="$SERVICES dhcpcd wpa_supplicant acpid"
         ;;
-        xfce*)
-            PKGS="$PKGS $XORG_PKGS lightdm lightdm-gtk-greeter xfce4 gnome-themes-standard gnome-keyring network-manager-applet gvfs-afc gvfs-mtp gvfs-smb udisks2 firefox xfce4-pulseaudio-plugin"
-            SERVICES="$SERVICES dbus lightdm NetworkManager polkitd"
-            LIGHTDM_SESSION=xfce
-
-            if [ "$variant" == "xfce-wayland" ]; then
-                PKGS="$PKGS $WAYLAND_PKGS labwc"
-                LIGHTDM_SESSION="xfce-wayland"
-            fi
-        ;;
         mate)
             PKGS="$PKGS $XORG_PKGS lightdm lightdm-gtk-greeter mate mate-extra gnome-keyring network-manager-applet gvfs-afc gvfs-mtp gvfs-smb udisks2 firefox"
             SERVICES="$SERVICES dbus lightdm NetworkManager polkitd"
@@ -183,6 +173,16 @@ build_variant() {
             PKGS="$PKGS $XORG_PKGS $CUSTOM_PKGS sonicde-meta sonic-terminal sonic-ecco firefox NetworkManager"
             SERVICES="$SERVICES dbus NetworkManager sddm bluetoothd cronie socklog-unix nanoklogd"
         ;;        
+        xfce*)
+            PKGS="$PKGS $XORG_PKGS lightdm lightdm-gtk-greeter xfce4 gnome-themes-standard gnome-keyring network-manager-applet gvfs-afc gvfs-mtp gvfs-smb udisks2 firefox xfce4-pulseaudio-plugin"
+            SERVICES="$SERVICES dbus lightdm NetworkManager polkitd"
+            LIGHTDM_SESSION=xfce
+
+            if [ "$variant" == "xfce-wayland" ]; then
+                PKGS="$PKGS $WAYLAND_PKGS labwc"
+                LIGHTDM_SESSION="xfce-wayland"
+            fi
+        ;;
         *)
             >&2 echo "Unknown variant $variant"
             exit 1
