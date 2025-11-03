@@ -20,9 +20,9 @@ usage() {
 
 	OPTIONS
 	 -a <arch>     Set architecture (or platform) in the image
-	 -b <variant>  One of base, enlightenment, xfce, mate, cinnamon, gnome, kde,
-	               lxde, lxqt, or xfce-wayland (default: base). May be specified multiple times
-	               to build multiple variants
+	 -b <variant>  One of base, cinnamon, enlightenment, gnome, hyprland, kde, labwc,
+	               lxde, lxqt, mate, openbox, xfce or xfce-wayland (default: base).
+	               May be specified multiple times to build multiple variants
 	 -d <date>     Override the datestamp on the generated image (YYYYMMDD format)
 	 -t <arch-date-variant>
 	               Equivalent to setting -a, -b, and -d
