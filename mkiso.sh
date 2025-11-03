@@ -168,6 +168,10 @@ build_variant() {
             SERVICES="$SERVICES dbus lightdm NetworkManager polkitd"
             LIGHTDM_SESSION=mate
         ;;
+        openbox)
+            PKGS="$PKGS $XORG_PKGS emptty gvfs-afc gvfs-mtp gvfs-smb jgmenu lxappearance-obconf obconf obmenu-generator polkit tint2 tint2conf udisks2 firefox"
+            SERVICES="$SERVICES acpid dbus dhcpcd wpa_supplicant emptty polkitd"
+        ;;
         xfce*)
             PKGS="$PKGS $XORG_PKGS lightdm lightdm-gtk-greeter xfce4 gnome-themes-standard gnome-keyring network-manager-applet gvfs-afc gvfs-mtp gvfs-smb udisks2 firefox xfce4-pulseaudio-plugin"
             SERVICES="$SERVICES dbus lightdm NetworkManager polkitd"
