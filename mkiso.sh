@@ -154,6 +154,10 @@ build_variant() {
             PKGS="$PKGS $XORG_PKGS kde5 konsole firefox dolphin NetworkManager"
             SERVICES="$SERVICES dbus NetworkManager sddm"
         ;;
+        labwc)
+            PKGS="$PKGS $WAYLAND_PKGS labwc labwc-menu-generator emptty gvfs-afc gvfs-mtp gvfs-smb udisks2 firefox"
+            SERVICES="$SERVICES acpid dbus dhcpcd wpa_supplicant emptty polkitd"
+        ;;
         lxde)
             PKGS="$PKGS $XORG_PKGS lxde lightdm lightdm-gtk-greeter gvfs-afc gvfs-mtp gvfs-smb udisks2 firefox"
             SERVICES="$SERVICES acpid dbus dhcpcd wpa_supplicant lightdm polkitd"
