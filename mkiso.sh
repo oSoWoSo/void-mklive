@@ -168,6 +168,10 @@ build_variant() {
             SERVICES="$SERVICES dbus lightdm NetworkManager polkitd"
             LIGHTDM_SESSION=mate
         ;;
+        openbox)
+            PKGS="$PKGS $XORG_PKGS emptty gvfs-afc gvfs-mtp gvfs-smb jgmenu lxappearance-obconf obconf obmenu-generator polkit tint2 tint2conf udisks2 firefox"
+            SERVICES="$SERVICES acpid dbus dhcpcd wpa_supplicant emptty polkitd"
+        ;;
         sonicde)
             CUSTOM_PKGS="ffmpeg mesa mesa-dri mesa-vaapi bluez libspa-bluetooth cronie elogind plymouth flatpak ark zathura kwrite qimgv mpv drawy octoxbps socklog-void"
             PKGS="$PKGS $XORG_PKGS $CUSTOM_PKGS sonicde-meta sonic-terminal sonic-ecco firefox NetworkManager"
