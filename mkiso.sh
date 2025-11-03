@@ -136,11 +136,6 @@ build_variant() {
         base)
             SERVICES="$SERVICES dhcpcd wpa_supplicant acpid"
         ;;
-        mate)
-            PKGS="$PKGS $XORG_PKGS lightdm lightdm-gtk-greeter mate mate-extra gnome-keyring network-manager-applet gvfs-afc gvfs-mtp gvfs-smb udisks2 firefox"
-            SERVICES="$SERVICES dbus lightdm NetworkManager polkitd"
-            LIGHTDM_SESSION=mate
-        ;;
         cinnamon)
             PKGS="$PKGS $XORG_PKGS lightdm lightdm-gtk-greeter cinnamon gnome-keyring colord gnome-terminal gvfs-afc gvfs-mtp gvfs-smb udisks2 firefox"
             SERVICES="$SERVICES dbus lightdm NetworkManager polkitd"
@@ -167,6 +162,11 @@ build_variant() {
         lxqt)
             PKGS="$PKGS $XORG_PKGS lxqt sddm gvfs-afc gvfs-mtp gvfs-smb udisks2 firefox"
             SERVICES="$SERVICES dbus dhcpcd wpa_supplicant sddm polkitd"
+        ;;
+        mate)
+            PKGS="$PKGS $XORG_PKGS lightdm lightdm-gtk-greeter mate mate-extra gnome-keyring network-manager-applet gvfs-afc gvfs-mtp gvfs-smb udisks2 firefox"
+            SERVICES="$SERVICES dbus lightdm NetworkManager polkitd"
+            LIGHTDM_SESSION=mate
         ;;
         xfce*)
             PKGS="$PKGS $XORG_PKGS lightdm lightdm-gtk-greeter xfce4 gnome-themes-standard gnome-keyring network-manager-applet gvfs-afc gvfs-mtp gvfs-smb udisks2 firefox xfce4-pulseaudio-plugin"
