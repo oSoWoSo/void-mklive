@@ -6,4 +6,6 @@ yes | ./mkiso.sh \
     -r https://repo-default.voidlinux.org/current/nonfree \
     -r https://github.com/xlibre-void/xlibre/releases/latest/download \
     -r https://github.com/sonicde-void/sonicde-void/releases/latest/download \
-    -- -C "live.autologin" -v "linux-lts" -o "vyrm-linux-sonicde-xlibre-x86_64-$(date +%Y%m%d).iso"
+    -- \
+    -I "$PWD/overlay" -C "live.autologin" -v "linux-lts" \
+    -o "vyrm-linux-sonicde-xlibre-x86_64-$(date +%Y%m%d).iso"
