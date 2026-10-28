@@ -1,0 +1,8 @@
+[Plymouth Theme]
+Name=Vyrm Logo
+Description=A theme that features a blank background with a Vyrm logo.
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/vyrm-logo
+ScriptFile=/usr/share/plymouth/themes/vyrm-logo/vyrm-logo.script

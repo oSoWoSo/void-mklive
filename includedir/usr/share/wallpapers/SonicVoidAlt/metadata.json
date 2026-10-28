@@ -1,0 +1,14 @@
+{
+    "KPlugin": {
+        "Authors": [
+            {
+                "Email": "karyan40024@gmail.com",
+                "Name": "nerdyslacker"
+            }
+        ],
+        "Id": "sonic-void-alt",
+        "License": "LGPLv3",
+        "Name": "Sonic Void Alt",
+        "Name[en_GB]": "Sonic Void Alt"
+    }
+}

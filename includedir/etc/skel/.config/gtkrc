@@ -1,0 +1,6 @@
+# created by KDE Plasma, Wed Oct 28 12:54:00 2026
+#
+include "/usr/share/themes/Silver/gtk-2.0/gtkrc"
+
+gtk-theme-name="Silver"
+

@@ -1431,6 +1431,10 @@ Root partition not empty! Aborting..." ${MSGBOXSIZE}
     cp $TARGETDIR/etc/skel/.[bix]* $TARGETDIR/root
 
     NETWORK_DONE="$(get_option NETWORK)"
+    # Enable plymouth
+    if [ -f $TARGETDIR/etc/plymouth/plymouthd.conf ]; then
+        chroot $TARGETDIR plymouth-set-default-theme -R vyrm-logo >>$LOG 2>&1
+    fi    
     # network settings for target
     if [ -n "$NETWORK_DONE" ]; then
         local net="$(get_option NETWORK)"

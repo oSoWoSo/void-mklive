@@ -127,7 +127,7 @@ build_variant() {
     PKGS="dialog cryptsetup lvm2 mdadm void-docs-browse xtools-minimal xmirror chrony tmux $A11Y_PKGS $GRUB_PKGS"
     FONTS="font-misc-misc terminus-font dejavu-fonts-ttf"
     WAYLAND_PKGS="$GFX_WL_PKGS $FONTS orca"
-    XORG_PKGS="$GFX_PKGS $FONTS xorg-minimal xorg-input-drivers setxkbmap xauth orca"
+    XORG_PKGS="$GFX_PKGS $FONTS xlibre setxkbmap xauth orca"
     SERVICES="sshd chronyd"
 
     LIGHTDM_SESSION=''
@@ -178,6 +178,11 @@ build_variant() {
             PKGS="$PKGS $XORG_PKGS lxqt sddm gvfs-afc gvfs-mtp gvfs-smb udisks2 firefox"
             SERVICES="$SERVICES dbus dhcpcd wpa_supplicant sddm polkitd"
         ;;
+        sonicde)
+            CUSTOM_PKGS="ffmpeg mesa mesa-dri mesa-demos mesa-vaapi binutils bluez libspa-bluetooth cronie elogind flatpak ark okular plymouth kwrite gwenview elisa vlc drawy octoxbps socklog-void"
+            PKGS="$PKGS $XORG_PKGS $CUSTOM_PKGS sonicde-meta sonic-terminal sonic-ecco firefox NetworkManager"
+            SERVICES="$SERVICES dbus NetworkManager sddm bluetoothd cronie socklog-unix nanoklogd"
+        ;;        
         *)
             >&2 echo "Unknown variant $variant"
             exit 1
@@ -206,7 +211,7 @@ EOF
         setup_pipewire
     fi
 
-    ./mklive.sh -a "$TARGET_ARCH" -o "$IMG" -p "$PKGS" -S "$SERVICES" -I "$INCLUDEDIR" \
+    ./mklive.sh -a "$TARGET_ARCH" -o "$IMG" -p "$PKGS" -S "$SERVICES" -I "$INCLUDEDIR" -I ./includedir/ \
         ${KERNEL_PKG:+-v $KERNEL_PKG} ${REPO} "$@"
 
 	cleanup

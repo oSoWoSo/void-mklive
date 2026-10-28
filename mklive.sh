@@ -219,6 +219,10 @@ generate_initramfs() {
 
     copy_dracut_files "$ROOTFS"
     copy_autoinstaller_files "$ROOTFS"
+    # Enable plymouth
+    if [ -f $ROOTFS/etc/plymouth/plymouthd.conf ]; then
+        chroot $ROOTFS plymouth-set-default-theme -R vyrm-logo
+    fi    
     chroot "$ROOTFS" env -i PATH="/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin:/bin:/sbin" \
         /usr/bin/dracut -N --"${INITRAMFS_COMPRESSION}" \
         --add-drivers "ahci" --force-add "vmklive autoinstaller" --omit systemd "/boot/initrd" $KERNELVERSION
