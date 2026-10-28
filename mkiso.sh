@@ -179,7 +179,7 @@ build_variant() {
             SERVICES="$SERVICES dbus dhcpcd wpa_supplicant sddm polkitd"
         ;;
         sonicde)
-            CUSTOM_PKGS="ffmpeg mesa mesa-dri mesa-demos mesa-vaapi binutils bluez libspa-bluetooth cronie elogind flatpak ark okular plymouth kwrite gwenview elisa vlc drawy octoxbps socklog-void"
+            CUSTOM_PKGS="ffmpeg mesa mesa-dri mesa-vaapi bluez libspa-bluetooth cronie elogind plymouth flatpak ark zathura kwrite qimgv mpv drawy octoxbps socklog-void"
             PKGS="$PKGS $XORG_PKGS $CUSTOM_PKGS sonicde-meta sonic-terminal sonic-ecco firefox NetworkManager"
             SERVICES="$SERVICES dbus NetworkManager sddm bluetoothd cronie socklog-unix nanoklogd"
         ;;        

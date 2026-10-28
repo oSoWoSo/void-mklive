@@ -134,7 +134,7 @@ ForegroundVisited=155,89,182
 
 [General]
 BrowserApplication=firefox.desktop
-ColorSchemeHash=c5cbaf85520e05983cd4e23ed390c62319a38d1e
+ColorSchemeHash=56ad28fc760ebd18e8afc687b84187f8b70c72ea
 XftAntialias=true
 XftHintStyle=hintslight
 XftSubPixel=none
@@ -145,7 +145,6 @@ smallestReadableFont=Noto Sans,8,-1,5,400,0,0,0,0,0,0,0,0,0,0,1,,0,0
 toolBarFont=Noto Sans,10,-1,5,400,0,0,0,0,0,0,0,0,0,0,1,,0,0
 
 [KDE]
-DefaultDarkLookAndFeel=org.kde.silverdarkbottompanel.desktop
 DoubleClickInterval=400
 LookAndFeelPackage=org.kde.silverdarkbottompanel.desktop
 ShowDeleteCommand=false
@@ -170,7 +169,7 @@ Sort directories first=true
 Sort hidden files last=false
 Sort reversed=false
 Speedbar Width=140
-View Style=Simple
+View Style=Detail
 
 [PreviewSettings]
 EnableRemoteFolderThumbnail=false
