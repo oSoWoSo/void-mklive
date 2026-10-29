@@ -1,0 +1,12 @@
+[Containments][445]
+activityId=afb29f55-4729-4ad5-a35e-ab63235f3bd7
+formfactor=0
+immutability=1
+lastScreen=0
+location=0
+plugin=org.kde.plasma.folder
+wallpaperplugin=org.kde.image
+
+[Containments][445][Wallpaper][org.kde.image][General]
+Image=file:///usr/share/wallpapers/SonicVoid/
+SlidePaths=/usr/share/wallpapers/

@@ -1,0 +1,7 @@
+[Mouse]
+cursorTheme=silver_cursors_dark
+Acceleration=2
+Threshold=4
+X11LibInputXAccelProfileFlat=true
+handed=0
+reverseScrollPolarity=false

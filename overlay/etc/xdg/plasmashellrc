@@ -1,0 +1,8 @@
+[PlasmaViews][Panel 446]
+floating=0
+panelVisibility=0
+shell=org.kde.plasma.desktop
+
+[PlasmaViews][Panel 446][Defaults]
+offset=0
+thickness=36

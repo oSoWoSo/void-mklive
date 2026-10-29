@@ -1,0 +1,7 @@
+[org.kde.kdecoration2]
+BorderSize=Normal
+BorderSizeAuto=false
+ButtonsOnLeft=MFS
+ButtonsOnRight=HIAX
+library=org.kde.silver
+theme=Silver

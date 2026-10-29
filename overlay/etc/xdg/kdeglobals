@@ -1,0 +1,9 @@
+[General]
+ColorScheme=SilverDark
+
+[Icons]
+Theme=silver-dark
+
+[KDE]
+LookAndFeelPackage=org.kde.silverdarkbottompanel.desktop
+widgetStyle=Silver

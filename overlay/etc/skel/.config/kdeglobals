@@ -134,7 +134,7 @@ ForegroundVisited=155,89,182
 
 [General]
 BrowserApplication=firefox.desktop
-ColorSchemeHash=56ad28fc760ebd18e8afc687b84187f8b70c72ea
+ColorScheme=SilverDark
 XftAntialias=true
 XftHintStyle=hintslight
 XftSubPixel=none
@@ -144,9 +144,13 @@ menuFont=Noto Sans,10,-1,5,400,0,0,0,0,0,0,0,0,0,0,1,,0,0
 smallestReadableFont=Noto Sans,8,-1,5,400,0,0,0,0,0,0,0,0,0,0,1,,0,0
 toolBarFont=Noto Sans,10,-1,5,400,0,0,0,0,0,0,0,0,0,0,1,,0,0
 
+[Icons]
+Theme=silver-dark
+
 [KDE]
 DoubleClickInterval=400
 LookAndFeelPackage=org.kde.silverdarkbottompanel.desktop
+widgetStyle=Silver
 ShowDeleteCommand=false
 StartDragDist=10
 StartDragTime=500
