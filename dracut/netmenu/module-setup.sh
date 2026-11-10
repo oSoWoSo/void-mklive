@@ -21,7 +21,7 @@ install() {
     inst /usr/bin/cut
     inst /usr/bin/cp
     inst /usr/bin/dhcpcd
-    inst /usr/bin/dialog
+    inst /usr/bin/gum
     inst /usr/bin/echo
     inst /usr/bin/env
     inst /usr/bin/find
@@ -74,13 +74,13 @@ install() {
     # doing this from dracut's installation function, but this is the
     # last place that file really exists 'on disk' in the sense that
     # we can modify it, so this change is applied here.
-    sed -i '/Packages from ISO image/d' "$moddir/installer.sh"
+    sed -i '/Packages from ISO image/d' "$moddir/gumstaller.sh"
 
     # The system doesn't have a real init up so the reboot is going to
     # be rough, we make it an option though if the end user wants to
     # do this...
-    sed -i "s:shutdown -r now:sync && reboot -f:" "$moddir/installer.sh"
+    sed -i "s:shutdown -r now:sync && reboot -f:" "$moddir/gumstaller.sh"
 
-    inst "$moddir/installer.sh" /usr/bin/void-installer
+    inst "$moddir/gumstaller.sh" /usr/bin/void-installer
     inst_hook pre-mount 05 "$moddir/netmenu.sh"
 }

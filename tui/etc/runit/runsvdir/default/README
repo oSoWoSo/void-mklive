@@ -1,0 +1,13 @@
+# runsvdir/default/ - Service symlinks for default runlevel
+#
+# Design:
+# - kmscon-tty1..tty6 are the primary DRM-backed consoles
+# - tty1 auto-logs in the live user and starts tui-session
+# - tty2..tty6 show standard login prompts (root access preserved)
+# - agetty-tty1..tty6 are disabled via runit 'down' markers
+#
+# Each kmscon-ttyN service calls the shared /etc/sv/kmscon/run script
+# using its VT number. The shared settings select KMSCON's built-in
+# Unifont font engine so text has a usable fixed-width cell grid.
+# Normally KMSCON failure falls back to agetty; /etc/default/tui-kmscon-only
+# disables that fallback for strict KMSCON-only builds.

@@ -624,12 +624,14 @@ STEP_COUNT=10
 
 mkdir -p "$ROOTFS" "$VOIDHOSTDIR" "$VOIDTARGETDIR" "$GRUB_DIR" "$ISOLINUX_DIR"
 
-print_step "Synchronizing XBPS repository data..."
+# Trust bundled repository keys before any package installation or metadata sync.
 copy_void_keys "$ROOTFS"
-XBPS_ARCH=$TARGET_ARCH $XBPS_INSTALL_CMD -r "$ROOTFS" ${XBPS_REPOSITORY} -S
 copy_void_keys "$VOIDHOSTDIR"
-XBPS_ARCH=$HOST_ARCH $XBPS_INSTALL_CMD -r "$VOIDHOSTDIR" ${XBPS_REPOSITORY} -S
 copy_void_keys "$VOIDTARGETDIR"
+
+print_step "Synchronizing XBPS repository data..."
+XBPS_ARCH=$TARGET_ARCH $XBPS_INSTALL_CMD -r "$ROOTFS" ${XBPS_REPOSITORY} -S
+XBPS_ARCH=$HOST_ARCH $XBPS_INSTALL_CMD -r "$VOIDHOSTDIR" ${XBPS_REPOSITORY} -S
 XBPS_ARCH=$TARGET_ARCH $XBPS_INSTALL_CMD -r "$VOIDTARGETDIR" ${XBPS_REPOSITORY} -S
 
 # Get linux version for ISO

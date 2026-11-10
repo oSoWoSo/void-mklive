@@ -1,0 +1,4 @@
+# Shared settings for kmscon-tty1 through kmscon-tty6.
+# Use KMSCON's built-in Unifont engine. Fontconfig on the live image
+# resolves Pango's generic monospace to Symbols Nerd Font (a 1px cell).
+export KMSCON_OPTS="--font-engine=unifont --font-size=16 --xkb-layout=us"

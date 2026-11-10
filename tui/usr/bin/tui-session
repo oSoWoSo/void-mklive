@@ -1,0 +1,45 @@
+#!/bin/sh
+# tui-session - Dispatcher for TUI desktop multiplexer
+# Runs as the live user (dropped privileges via tui-auto-login).
+# Picks the installed multiplexer by priority:
+#   1. tuios        (Terminal UI OS, needs a true-color terminal)
+#   2. desktop-tui  (Rust-based, experimental TUI desktop)
+#   3. vtm          (directvt/vtm, needs terminal)
+#   4. dvtm         (suckless, needs terminal)
+# If none found, drops into a login shell so user is never locked out.
+
+set -eu
+
+# KMSCON supplies TERM=kmscon on its virtual terminal
+[ -n "${TERM:-}" ] || TERM="xterm-256color"
+[ -n "${COLORTERM:-}" ] || COLORTERM="truecolor"
+export TERM COLORTERM
+
+# Ensure HOME is set
+[ -n "${HOME:-}" ] || HOME="/home/$(id -un)"
+export PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+
+if command -v tuios >/dev/null 2>&1; then
+    exec tuios
+fi
+
+# Priority 2: desktop-tui (standalone, no nested terminal needed)
+if command -v desktop-tui >/dev/null 2>&1; then
+    exec desktop-tui
+fi
+
+# Priority 3: vtm (needs a terminal to draw in; KMSCON VT is sufficient)
+if command -v vtm >/dev/null 2>&1; then
+    exec vtm
+fi
+
+# Priority 4: dvtm (also wants a terminal; -s for status bar)
+if command -v dvtm >/dev/null 2>&1; then
+    exec dvtm -s
+fi
+
+# None found - drop to login shell instead of exiting
+# This ensures the user is never locked out
+echo "tui-session: no multiplexer found (tuios, desktop-tui, vtm, dvtm all missing)" >&2
+echo "tui-session: starting login shell (${SHELL:-/bin/sh})" >&2
+exec "${SHELL:-/bin/sh}" -l

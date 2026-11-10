@@ -143,7 +143,7 @@ cp dracut/netmenu/* "$ROOTFS/usr/lib/dracut/modules.d/05netmenu/"
 # all its quirks, oddities, and wierdness.  It's included here for
 # places where you might have a lab network and need to run manual
 # installs from the network.
-cp installer.sh "$ROOTFS/usr/lib/dracut/modules.d/05netmenu/"
+cp gumstaller.sh "$ROOTFS/usr/lib/dracut/modules.d/05netmenu/"
 
 # Of course with a PXE environment unattended installs are the norm.
 # The autoinstaller is loaded as a very high priority dracut module
@@ -155,8 +155,8 @@ info_msg "Install kernel and additional required netboot packages"
 # The rootfs has no kernel in it, so it needs to have at the very
 # least dracut, syslinux, and linux installed.  binutils provides
 # /usr/bin/strip which lets us shrink down the size of the initrd
-# dracut-network provides the in-initrd network stack dialog is needed
-# by the install environment.  ${INITRAMFS_COMPRESSION} is the name of
+# dracut-network provides the in-initrd network stack that gum-based
+# void-installer needs.  ${INITRAMFS_COMPRESSION} is the name of
 # the compressor we want to use (lz4 by default).
 if [ -z "${XBPS_TARGET_ARCH##*86*}" ] ; then
     # This platform is x86 or compatible, we should use
@@ -170,7 +170,7 @@ else
     info_msg "Selecting u-boot bootloader"
     bootloader_pkg=uboot-mkimage
 fi
-run_cmd_target "xbps-install $XBPS_CONFFILE $XBPS_CACHEDIR $XBPS_REPOSITORY -r $ROOTFS -Sy ${KERNELPKG-linux} dracut binutils dracut-network dialog jq ${INITRAMFS_COMPRESSION-xz} ${bootloader_pkg}"
+run_cmd_target "xbps-install $XBPS_CONFFILE $XBPS_CACHEDIR $XBPS_REPOSITORY -r $ROOTFS -Sy ${KERNELPKG-linux} dracut binutils dracut-network gum jq ${INITRAMFS_COMPRESSION-xz} ${bootloader_pkg}"
 run_cmd_chroot "$ROOTFS" "xbps-reconfigure -a"
 
 # Dracut needs to know the kernel version that will be using this

@@ -1,18 +1,15 @@
 #!/bin/sh
 
-dialog --colors --keep-tite --no-shadow --no-mouse \
-       --backtitle "\Zb\Z7Void Linux installation -- https://www.voidlinux.org\Zn" \
-       --cancel-label "Reboot" --aspect 20 \
-       --menu "Select an Action:" 10 50 2 \
-       "Install" "Run void-installer" \
-       "Shell" "Run dash" \
-       2>/tmp/netmenu.action
+# gum action menu. Cancelling the picker (ESC / ctrl-c) reboots, which
+# matches the previous dialog --cancel-label "Reboot" behaviour.
+action=$(gum choose \
+    --header "Void Linux installation -- https://www.voidlinux.org
 
-if [ ! $? ] ; then
-    reboot -f
-fi
+Select an Action:" \
+    "Install" \
+    "Shell") || reboot -f
 
-case $(cat /tmp/netmenu.action) in
+case "$action" in
     "Install") /usr/bin/void-installer ; exec sh ;;
     "Shell") exec sh ;;
 esac

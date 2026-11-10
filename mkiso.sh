@@ -8,8 +8,14 @@ PROGNAME=$(basename "$0")
 ARCH=$(uname -m)
 IMAGES="base"
 TRIPLET=
-REPO=
+# Repositories requested on the command line. Kept separate from the
+# per-variant list so that building several variants in one run does not leak
+# one variant's repository into the next.
+CLI_REPOS=()
 DATE=$(date -u +%Y%m%d)
+# Path to the TUI include tree (copied into INCLUDEDIR for tui-* variants)
+TUI_DIR="$(dirname "$0")/tui"
+KMSCON_ONLY=no
 
 usage() {
 	cat <<-EOH
@@ -21,8 +27,11 @@ usage() {
 	OPTIONS
 	 -a <arch>     Set architecture (or platform) in the image
 	 -b <variant>  One of base, cinnamon, enlightenment, gnome, hyprland, kde, labwc,
-	               lxde, lxqt, mate, openbox, xfce or xfce-wayland (default: base).
+	               lxde, lxqt, mate, openbox, xfce, xfce-wayland, tui-dvtm, tui-vtm,
+	               tui-desktop, or tui-tuios (default: base).
 	               May be specified multiple times to build multiple variants
+	 --kmscon-only Use strict KMSCON-only mode for TUI variants: omit fbterm and
+	               disable the agetty fallback. No effect on non-TUI variants.
 	 -d <date>     Override the datestamp on the generated image (YYYYMMDD format)
 	 -t <arch-date-variant>
 	               Equivalent to setting -a, -b, and -d
@@ -30,17 +39,40 @@ usage() {
 	 -h            Show this help and exit
 	 -V            Show version and exit
 
+	TUI variants use the tui/ include tree and enable console TUI on tty1-6.
+	Use --kmscon-only to remove the agetty fallback when KMSCON is required.
+
 	Other options can be passed directly to mklive.sh by specifying them after the --.
 	See mklive.sh -h for more details.
 	EOH
 }
+
+# Parse this wrapper's long option before getopts, preserving mklive options.
+LONG_ARGS=()
+while [ "$#" -gt 0 ]; do
+	case "$1" in
+		--kmscon-only)
+			KMSCON_ONLY=yes
+			shift
+			;;
+		--)
+			LONG_ARGS+=("$@")
+			break
+			;;
+		*)
+			LONG_ARGS+=("$1")
+			shift
+			;;
+	esac
+done
+set -- "${LONG_ARGS[@]}"
 
 while getopts "a:b:d:t:hr:V" opt; do
 case $opt in
     a) ARCH="$OPTARG";;
     b) IMAGES="$OPTARG";;
     d) DATE="$OPTARG";;
-    r) REPO="-r $OPTARG $REPO";;
+    r) CLI_REPOS+=("-r" "$OPTARG");;
     t) TRIPLET="$OPTARG";;
     V) version; exit 0;;
     h) usage; exit 0;;
@@ -57,14 +89,14 @@ cleanup() {
 }
 
 include_installer() {
-    if [ -x installer.sh ]; then
+    if [ -x gumstaller.sh ]; then
         MKLIVE_VERSION="$(PROGNAME='' version)"
         installer=$(mktemp)
-        sed "s/@@MKLIVE_VERSION@@/${MKLIVE_VERSION}/" installer.sh > "$installer"
+        sed "s/@@MKLIVE_VERSION@@/${MKLIVE_VERSION}/" gumstaller.sh > "$installer"
         install -Dm755 "$installer" "$INCLUDEDIR"/usr/bin/void-installer
         rm "$installer"
     else
-        echo installer.sh not found >&2
+        echo gumstaller.sh not found >&2
         exit 1
     fi
 }
@@ -89,6 +121,11 @@ setup_pipewire() {
 
 build_variant() {
     variant="$1"
+    if [ "$variant" = tui-tuios ] && [ "$ARCH" != x86_64 ]; then
+        echo "tui-tuios is only available for x86_64 (the package repository does not provide other architectures)" >&2
+        exit 1
+    fi
+
     shift
     IMG=void-live-${ARCH}-${DATE}-${variant}.iso
 
@@ -124,13 +161,18 @@ build_variant() {
     esac
 
     A11Y_PKGS="espeakup void-live-audio brltty"
-    PKGS="dialog cryptsetup lvm2 mdadm void-docs-browse xtools-minimal xmirror chrony tmux $A11Y_PKGS $GRUB_PKGS"
+    PKGS="gum cryptsetup lvm2 mdadm void-docs-browse xtools-minimal xmirror chrony tmux $A11Y_PKGS $GRUB_PKGS"
     FONTS="font-misc-misc terminus-font dejavu-fonts-ttf"
     WAYLAND_PKGS="$GFX_WL_PKGS $FONTS orca"
     XORG_PKGS="$GFX_PKGS $FONTS xlibre setxkbmap xauth orca"
     SERVICES="sshd chronyd"
 
     LIGHTDM_SESSION=''
+
+    # Shared TUI package set (all verified in official repo)
+    TUI_PKGS="dvtm zellij fbterm yazi nnn ranger vifm mc neovim micro lazygit tig delta difftastic btop htop glances bottom nvtop bmon slurm gdu duf dust ncdu fzf peco fzy zoxide starship bash-completion tealdeer tldr bat ripgrep fd eza jq yq sd gron tree glow w3m elinks chafa newsboat aerc mutt weechat mpv mpd ncmpcpp cava yt-dlp traceroute mtr iperf3 aria2 rsync p7zip pciutils lm_sensors fastfetch bc calcurse sudo alsa-utils terminus-font"
+    # These packages provide the runit services enabled by every TUI flavor.
+    TUI_SERVICE_PKGS="dbus elogind NetworkManager polkit"
 
     case $variant in
         base)
@@ -151,7 +193,7 @@ build_variant() {
             SERVICES="$SERVICES dbus gdm NetworkManager polkitd"
         ;;
         hyprland)
-            REPO="https://raw.githubusercontent.com/Encoded14/void-extra/repository-x86_64-glibc"
+            CLI_REPOS+=("-r" "https://raw.githubusercontent.com/Encoded14/void-extra/repository-x86_64-glibc")
             PKGS="$PKGS $WAYLAND_PKGS elogind emptty hyprland hyprpolkitagent seatd NetworkManager"
             SERVICES="$SERVICES acpid dbus elogind emptty NetworkManager seatd polkitd"
         ;;
@@ -171,6 +213,45 @@ build_variant() {
         lxqt)
             PKGS="$PKGS $XORG_PKGS lxqt sddm gvfs-afc gvfs-mtp gvfs-smb udisks2 firefox"
             SERVICES="$SERVICES dbus dhcpcd wpa_supplicant sddm polkitd"
+        ;;
+        mate)
+            PKGS="$PKGS $XORG_PKGS lightdm lightdm-gtk-greeter mate mate-extra gnome-keyring network-manager-applet gvfs-afc gvfs-mtp gvfs-smb udisks2 firefox"
+            SERVICES="$SERVICES dbus lightdm NetworkManager polkitd"
+            LIGHTDM_SESSION=mate
+        ;;
+        openbox)
+            PKGS="$PKGS $XORG_PKGS emptty gvfs-afc gvfs-mtp gvfs-smb jgmenu lxappearance-obconf obconf obmenu-generator polkit tint2 tint2conf udisks2 firefox"
+            SERVICES="$SERVICES acpid dbus dhcpcd wpa_supplicant emptty polkitd"
+        ;;
+        xfce*)
+            PKGS="$PKGS $XORG_PKGS lightdm lightdm-gtk-greeter xfce4 gnome-themes-standard gnome-keyring network-manager-applet gvfs-afc gvfs-mtp gvfs-smb udisks2 firefox xfce4-pulseaudio-plugin"
+            SERVICES="$SERVICES dbus lightdm NetworkManager polkitd"
+            LIGHTDM_SESSION=xfce
+
+            if [ "$variant" == "xfce-wayland" ]; then
+                PKGS="$PKGS $WAYLAND_PKGS labwc"
+                LIGHTDM_SESSION="xfce-wayland"
+            fi
+        ;;
+        tui-dvtm)
+            CLI_REPOS+=("-r" "https://repo.osowoso.org/x86_64")
+            PKGS="$PKGS kmscon fbterm util-linux $TUI_PKGS $TUI_SERVICE_PKGS"
+            SERVICES="$SERVICES acpid dbus elogind NetworkManager polkitd"
+        ;;
+        tui-vtm)
+            CLI_REPOS+=("-r" "https://repo.osowoso.org/x86_64")
+            PKGS="$PKGS kmscon fbterm util-linux $TUI_PKGS $TUI_SERVICE_PKGS vtm"
+            SERVICES="$SERVICES acpid dbus elogind NetworkManager polkitd"
+        ;;
+        tui-desktop)
+            CLI_REPOS+=("-r" "https://repo.osowoso.org/x86_64")
+            PKGS="$PKGS kmscon fbterm util-linux $TUI_PKGS $TUI_SERVICE_PKGS desktop-tui"
+            SERVICES="$SERVICES acpid dbus elogind NetworkManager polkitd"
+        ;;
+        tui-tuios)
+            CLI_REPOS+=("-r" "https://repo.osowoso.org/x86_64")
+            PKGS="$PKGS kmscon fbterm util-linux $TUI_PKGS $TUI_SERVICE_PKGS tuios"
+            SERVICES="$SERVICES acpid dbus elogind NetworkManager polkitd"
         ;;
         mate)
             PKGS="$PKGS $XORG_PKGS lightdm lightdm-gtk-greeter mate mate-extra gnome-keyring network-manager-applet gvfs-afc gvfs-mtp gvfs-smb udisks2 firefox"
@@ -220,12 +301,36 @@ EOF
         chmod 755 "$INCLUDEDIR"/usr/bin/void-installer
     fi
 
-    if [ "$variant" != base ]; then
-        setup_pipewire
+    # Copy tui/ include tree for TUI variants
+    case $variant in
+        tui-*)
+            if [ -d "$TUI_DIR" ]; then
+                cp -rfpPv "$TUI_DIR"/. "$INCLUDEDIR"/
+            fi
+            ;;
+    esac
+
+    if [ "$KMSCON_ONLY" = yes ]; then
+        case "$variant" in
+            tui-*)
+                PKGS="${PKGS// fbterm/}"
+                mkdir -p "$INCLUDEDIR/etc/default"
+                : > "$INCLUDEDIR/etc/default/tui-kmscon-only"
+                ;;
+        esac
     fi
 
+    # Skip pipewire for base and TUI variants (TUI uses ALSA via alsa-utils)
+    case $variant in
+        base|tui-*)
+            ;;
+        *)
+            setup_pipewire
+            ;;
+    esac
+
     ./mklive.sh -a "$TARGET_ARCH" -o "$IMG" -p "$PKGS" -S "$SERVICES" -I "$INCLUDEDIR" \
-        ${KERNEL_PKG:+-v $KERNEL_PKG} ${REPO} "$@"
+        ${KERNEL_PKG:+-v $KERNEL_PKG} "${CLI_REPOS[@]}" "$@"
 
 	cleanup
 }

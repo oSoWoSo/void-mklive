@@ -1,0 +1,35 @@
+#!/bin/sh
+exec 2>&1
+
+[ -r /etc/sv/kmscon/conf ] && . /etc/sv/kmscon/conf
+
+TTY=${1:-${PWD##*-tty}}
+case "$TTY" in
+    1|2|3|4|5|6) ;;
+    *) echo "kmscon: cannot determine VT from service directory: $PWD" >&2; exit 1 ;;
+esac
+
+# Clear stale processes on this VT before taking ownership.
+pkill -f "kmscon.*--vt=$TTY" 2>/dev/null || true
+
+# The live image auto-logs in its live user. Installed systems use a normal
+# login prompt; the installer removes live.conf and the live-only helper.
+if [ "$TTY" = 1 ]; then
+    if [ -r /etc/default/live.conf ] && [ -x /usr/bin/tui-auto-login ]; then
+        kmscon --vt="$TTY" ${KMSCON_OPTS:-} --switchvt --login -- /usr/bin/tui-auto-login 2>&1
+    else
+        kmscon --vt="$TTY" ${KMSCON_OPTS:-} --switchvt --login -- /bin/login -p 2>&1
+    fi
+else
+    kmscon --vt="$TTY" ${KMSCON_OPTS:-} --no-switchvt --login -- /bin/login -p 2>&1
+fi
+kmscon_rc=$?
+
+if [ "$kmscon_rc" -ne 0 ]; then
+    if [ -f /etc/default/tui-kmscon-only ]; then
+        echo "kmscon: failed with status $kmscon_rc; agetty fallback is disabled" >&2
+        exit "$kmscon_rc"
+    fi
+    exec agetty 115200 "tty$TTY" "vt$TTY" 2>&1
+fi
+exit 0

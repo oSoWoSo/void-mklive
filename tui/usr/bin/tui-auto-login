@@ -1,0 +1,54 @@
+#!/bin/sh
+# tui-auto-login - Auto-login the live user into tui-session
+# Runs as ROOT as the tty1 KMSCON login command
+# Reads username from /etc/default/live.conf, drops privileges via setpriv,
+# and execs tui-session as the live user.
+
+set -eu
+
+LIVE_CONF="/etc/default/live.conf"
+DEFAULT_USER="anon"
+
+# Read username from live.conf (written by mklive's adduser.sh)
+if [ -f "$LIVE_CONF" ]; then
+    # shellcheck source=/dev/null
+    . "$LIVE_CONF"
+fi
+
+USERNAME="${USERNAME:-$DEFAULT_USER}"
+
+# Resolve user info
+USER_INFO=$(getent passwd "$USERNAME") || {
+    echo "tui-auto-login: user '$USERNAME' not found" >&2
+    exit 1
+}
+
+UID_NUM=$(id -u "$USERNAME") || {
+    echo "tui-auto-login: cannot get uid for '$USERNAME'" >&2
+    exit 1
+}
+
+GID_NUM=$(id -g "$USERNAME") || {
+    echo "tui-auto-login: cannot get gid for '$USERNAME'" >&2
+    exit 1
+}
+
+HOME_DIR=$(echo "$USER_INFO" | cut -d: -f6)
+SHELL_PATH=$(echo "$USER_INFO" | cut -d: -f7)
+[ -n "$SHELL_PATH" ] || SHELL_PATH="/bin/sh"
+
+# Build a sane user PATH
+USER_PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+
+# Change to user's home
+cd "$HOME_DIR" || {
+    echo "tui-auto-login: cannot cd to $HOME_DIR" >&2
+    exit 1
+}
+
+# Exec tui-session as the live user via setpriv
+# --init-groups plus explicit --regid is the correct combination
+exec setpriv --reuid="$UID_NUM" --regid="$GID_NUM" --init-groups \
+    env HOME="$HOME_DIR" USER="$USERNAME" LOGNAME="$USERNAME" \
+    SHELL="$SHELL_PATH" PATH="$USER_PATH" \
+    /usr/bin/tui-session

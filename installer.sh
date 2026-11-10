@@ -44,13 +44,56 @@ FILESYSTEMS_DONE=
 MIRROR_DONE=
 
 TARGETDIR=/mnt/target
-LOG=/dev/tty8
+
+# Auto-detect a usable log sink: prefer /dev/tty8 and /dev/console for classic
+# images, then the controlling terminal and tty1..tty7; fall back to a temp file.
+# This works on both standard and TUI (kmscon) live images.
+detect_log() {
+    local candidates=(
+        "/dev/tty8"
+        "/dev/console"
+        "/dev/tty1"
+        "/dev/tty2"
+        "/dev/tty3"
+        "/dev/tty4"
+        "/dev/tty5"
+        "/dev/tty6"
+        "/dev/tty7"
+    )
+
+    # Try the controlling terminal first if we have one
+    if [ -t 0 ]; then
+        local ctty
+        ctty="$(readlink -f /dev/stdin 2>/dev/null || true)"
+        if [ -n "$ctty" ] && [ -c "$ctty" ] && [ -w "$ctty" ]; then
+            echo "$ctty"
+            return 0
+        fi
+    fi
+
+    # Try each candidate
+    for candidate in "${candidates[@]}"; do
+        if [ -c "$candidate" ] && [ -w "$candidate" ]; then
+            echo "$candidate"
+            return 0
+        fi
+    done
+
+    # Fallback to temp file so installer never hard-fails on logging
+    local fallback
+    fallback="$(mktemp -t vinstall-log-XXXXXXXX 2>/dev/null || echo "/tmp/vinstall.log")"
+    echo "$fallback"
+    return 0
+}
+
+LOG="$(detect_log)"
 CONF_FILE=/tmp/.void-installer.conf
 if [ ! -f $CONF_FILE ]; then
     touch -f $CONF_FILE
 fi
 ANSWER=$(mktemp -t vinstall-XXXXXXXX || exit 1)
 TARGET_SERVICES=$(mktemp -t vinstall-sv-XXXXXXXX || exit 1)
+TARGET_SELECTED=$(mktemp -t vinstall-sel-XXXXXXXX || exit 1)
 TARGET_FSTAB=$(mktemp -t vinstall-fstab-XXXXXXXX || exit 1)
 
 trap "DIE" INT TERM QUIT
@@ -113,7 +156,7 @@ DIE() {
     rval=$1
     [ -z "$rval" ] && rval=0
     clear
-    rm -f $ANSWER $TARGET_FSTAB $TARGET_SERVICES
+    rm -f $ANSWER $TARGET_FSTAB $TARGET_SERVICES $TARGET_SELECTED
     # reenable printk
     if [ -w /proc/sys/kernel/printk ]; then
         echo 4 >/proc/sys/kernel/printk
@@ -1277,7 +1320,8 @@ install_packages() {
 menu_services() {
     local sv _status _checklist=""
     # filter out services that probably shouldn't be messed with
-    local sv_ignore='^(agetty-(tty[1-9]|generic|serial|console)|udevd|sulogin)$'
+    # kmscon-tty* are live-only TUI console services; suppress them like agetty
+    local sv_ignore='^(agetty-(tty[1-9]|generic|serial|console)|kmscon-(tty[1-6]|generic)|udevd|sulogin)$'
     find $TARGETDIR/etc/runit/runsvdir/default -mindepth 1 -maxdepth 1 -xtype d -printf '%f\n' | \
         grep -Ev "$sv_ignore" | sort -u > "$TARGET_SERVICES"
     while true; do
@@ -1293,10 +1337,14 @@ menu_services() {
         done < <(find $TARGETDIR/etc/sv -mindepth 1 -maxdepth 1 -type d -printf '%f\n' | grep -Ev "$sv_ignore" | sort -u)
         DIALOG --no-tags --checklist "Select services to enable:" 20 60 18 ${_checklist}
         if [ $? -eq 0 ]; then
-            comm -13 "$TARGET_SERVICES" <(cat "$ANSWER" | tr ' ' '\n') | while read -r sv; do
+            # The checklist returns items in selection order, not sorted; comm
+            # silently reports garbage on unsorted input, which used to disable
+            # services the user never touched (NetworkManager, elogind, ...).
+            tr ' ' '\n' < "$ANSWER" | grep -v '^$' | sort -u > "$TARGET_SELECTED"
+            comm -13 "$TARGET_SERVICES" "$TARGET_SELECTED" | while read -r sv; do
                 enable_service "$sv"
             done
-            comm -23 "$TARGET_SERVICES" <(cat "$ANSWER" | tr ' ' '\n') | while read -r sv; do
+            comm -23 "$TARGET_SERVICES" "$TARGET_SELECTED" | while read -r sv; do
                 disable_service "$sv"
             done
             break
@@ -1378,8 +1426,13 @@ Root partition not empty! Aborting..." ${MSGBOXSIZE}
         # Remove live user.
         echo "Removing $USERNAME live user from targetdir ..." >$LOG
         chroot $TARGETDIR userdel -r $USERNAME >$LOG 2>&1
-        rm -f $TARGETDIR/etc/sudoers.d/99-void-live
-        sed -i "s,GETTY_ARGS=\"--noclear -a $USERNAME\",GETTY_ARGS=\"--noclear\",g" $TARGETDIR/etc/sv/agetty-tty1/conf
+        rm -f "$TARGETDIR/etc/sudoers.d/99-void-live"
+        # Remove live-only login configuration so installed KMSCON prompts normally.
+        rm -f "$TARGETDIR/etc/default/live.conf" "$TARGETDIR/usr/bin/tui-auto-login"
+        # KMSCON handles tty1 on TUI images; agetty's conf may not exist.
+        if [ -f "$TARGETDIR/etc/sv/agetty-tty1/conf" ]; then
+            sed -i "s,GETTY_ARGS=\"--noclear -a $USERNAME\",GETTY_ARGS=\"--noclear\",g" "$TARGETDIR/etc/sv/agetty-tty1/conf"
+        fi
         TITLE="Check $LOG for details ..."
         INFOBOX "Rebuilding initramfs for target ..." 4 60
         echo "Rebuilding initramfs for target ..." >$LOG

@@ -9,21 +9,27 @@ This repository contains several utilities:
 * [*mklive.sh*](#mklivesh) - The Void Linux live image generator for x86
 * [*mkiso.sh*](#mkisosh) - Wrapper script to generate bootable and installable live
   images for i686, x86_64, and aarch64.
+* [*build-iso-gum.sh*](#build-iso-gumsh) - Interactive Gum selector for choosing
+  architectures and building one or more live ISO variants.
 * [*mkrootfs.sh*](#mkrootfssh) - The Void Linux rootfs generator for all platforms
 * [*mkplatformfs.sh*](#mkplatformfssh) - The Void Linux filesystem tool to produce
   a rootfs for a particular platform
 * [*mkimage.sh*](#mkimagesh) - The Void Linux image generator for ARM platforms
 * [*mknet.sh*](#mknetsh) - Script to generate netboot tarballs for Void
 * *installer.sh* - The Void Linux el-cheapo installer for x86
+* *gumstaller.sh* - gum-based variant of the el-cheapo installer (same flow, gum UI)
 * *release.sh* - interacts with GitHub CI to generate and sign images for releases
 
 ### Workflow
 
 #### Generating x86 live ISOs
 
-To generate a live ISO like the officially-published ones, use
-[*mkiso.sh*](#mkisosh). To generate a more basic live ISO
-(which does not include things like `void-installer`), use [*mklive.sh*](#mklivesh).
+To generate a live ISO like the officially-published ones, use [*mkiso.sh*](#mkisosh).
+To generate a more basic live ISO (which does not include things like `void-installer`), use [*mklive.sh*](#mklivesh).
+
+For an interactive selector that filters architectures and variants, run
+`./build-iso-gum.sh`. It lets you choose multiple variants, set the image date
+and optionally add an XBPS repository; building requires root or `sudo`.
 
 #### Generating ROOTFS tarballs
 
@@ -62,6 +68,7 @@ Linux, or in containers.
 * xbps>=0.45
 * qemu-user-static binaries (for mkrootfs)
 * bash
+* `gum` for `build-iso-gum.sh` (and `sudo` when not running as root)
 
 ## Kernel Command-line Parameters
 
@@ -90,6 +97,16 @@ that can change the behavior of the live system:
 
 ## Usage
 
+### build-iso-gum.sh
+
+```
+Usage: build-iso-gum.sh
+
+Choose an architecture, one or more ISO variants, a date, and optionally an
+XBPS repository. Selections are passed to mkiso.sh; non-root builds use sudo.
+Requires gum.
+```
+
 ### mkiso.sh
 
 ```
@@ -100,15 +117,19 @@ Adds void-installer and other helpful utilities to the generated images.
 
 OPTIONS
  -a <arch>     Set architecture (or platform) in the image
- -b <variant>  One of base, enlightenment, xfce, mate, cinnamon, gnome, kde,
-               lxde, lxqt, or xfce-wayland (default: base). May be specified multiple times
-               to build multiple variants
+ -b <variant>  One of base, cinnamon, enlightenment, gnome, hyprland, kde, labwc,
+               lxde, lxqt, mate, openbox, xfce, xfce-wayland, tui-dvtm, tui-vtm,
+               tui-desktop, or tui-tuios (default: base).
+               May be specified multiple times to build multiple variants
  -d <date>     Override the datestamp on the generated image (YYYYMMDD format)
  -t <arch-date-variant>
                Equivalent to setting -a, -b, and -d
  -r <repo>     Use this XBPS repository. May be specified multiple times
  -h            Show this help and exit
  -V            Show version and exit
+
+TUI variants (tui-dvtm, tui-vtm, tui-desktop, tui-tuios) use the tui/ include
+tree and enable console TUI on tty1-6.
 
 Other options can be passed directly to mklive.sh by specifying them after the --.
 See mklive.sh -h for more details.
@@ -177,6 +198,7 @@ OPTIONS
  -r <repo>        Use this XBPS repository. May be specified multiple times
  -o <file>        Filename to write the ROOTFS to (default: automatic)
  -x <num>         Number of threads to use for image compression (default: dynamic)
+ -z <format>      Compression format to use [xz, none] (default: xz)
  -h               Show this help and exit
  -V               Show version and exit
 ```

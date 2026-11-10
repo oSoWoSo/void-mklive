@@ -1,0 +1,77 @@
+#!/bin/sh
+# tui-switch - TUI launcher menu for choosing between installed sessions
+# Uses fzf if available, otherwise a plain numbered menu.
+# Traps INT/TERM to restore terminal before execing chosen session.
+
+set -eu
+
+# Collect available sessions
+SESSIONS=""
+CMDS=""
+
+add_session() {
+    if command -v "$2" >/dev/null 2>&1; then
+        SESSIONS="$SESSIONS$1\n"
+        CMDS="$CMDS$2\n"
+    fi
+}
+
+add_session "tuios" "tuios"
+
+add_session "desktop-tui" "desktop-tui"
+add_session "vtm" "vtm"
+add_session "dvtm" "dvtm"
+
+# Remove trailing newline
+SESSIONS=$(printf "%s" "$SESSIONS")
+CMDS=$(printf "%s" "$CMDS")
+
+if [ -z "$SESSIONS" ]; then
+    echo "tui-switch: no sessions available" >&2
+    exec "$SHELL" -l
+fi
+
+# Trap to restore terminal on exit/interrupt
+restore_terminal() {
+    stty sane 2>/dev/null || true
+    printf '\033[0m\033[?25h\033[?1049l\033[H\033[2J'
+}
+
+trap 'restore_terminal' INT TERM EXIT
+
+CHOICE=""
+
+if command -v fzf >/dev/null 2>&1; then
+    CHOICE=$(printf "%s" "$SESSIONS" | fzf --prompt="Select session: " --height=10 --reverse) || {
+        echo "tui-switch: cancelled" >&2
+        exec "$SHELL" -l
+    }
+else
+    # Plain numbered menu
+    i=1
+    printf "%s\n" "$SESSIONS" | while IFS= read -r line; do
+        printf "  %d) %s\n" "$i" "$line"
+        i=$((i + 1))
+    done
+    printf "Select session [1-%d]: " "$((i - 1))"
+    read -r NUM
+    case "$NUM" in
+        ''|*[!0-9]*) exec "$SHELL" -l ;;
+    esac
+    if [ "$NUM" -ge 1 ] && [ "$NUM" -le "$((i - 1))" ]; then
+        CHOICE=$(printf "%s" "$SESSIONS" | sed -n "${NUM}p")
+    else
+        exec "$SHELL" -l
+    fi
+fi
+
+# Map choice to command
+CMD=$(printf "%s" "$SESSIONS" | grep -n "^$CHOICE$" | cut -d: -f1)
+if [ -n "$CMD" ]; then
+    EXEC_CMD=$(printf "%s" "$CMDS" | sed -n "${CMD}p")
+    trap - INT TERM EXIT
+    restore_terminal
+    exec "$EXEC_CMD"
+fi
+
+exec "$SHELL" -l
